@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, Platform, ActivityIndicator, ImageBackground } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { BlurView } from 'expo-blur';
 
 const images = [
   {
-    src: "https://images.pexels.com/photos/14646752/pexels-photo-14646752.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=600&h=400",
+    src: require('../../assets/venues/venue1_img1.jpg'),
     alt: "Venue 1"
   },
   {
-    src: "https://images.pexels.com/photos/17023032/pexels-photo-17023032.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=600&h=400",
+    src: require('../../assets/venues/venue2_img1.jpg'),
     alt: "Venue 2"
   },
   {
-    src: "https://images.pexels.com/photos/17206173/pexels-photo-17206173.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=600&h=400",
+    src: require('../../assets/venues/venue3_img2.jpg'),
     alt: "Venue 3"
   },
   {
-    src: "https://images.pexels.com/photos/10949592/pexels-photo-10949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=600&h=400",
+    src: require('../../assets/venues/venue4_img1.jpg'),
     alt: "Venue 4"
   }
 ];
@@ -27,6 +28,7 @@ const windowWidth = Dimensions.get('window').width;
 export default function HomePage({ navigation }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCity, setSelectedCity] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -40,105 +42,150 @@ export default function HomePage({ navigation }) {
     setCurrentIndex(idx);
   };
 
-  const handleCityChange = (itemValue) => {
-    setSelectedCity(itemValue);
-    if (itemValue && navigation) {
-      navigation.navigate('Venues', { city: itemValue });
+  const handleCityChange = async (itemValue) => {
+    if (itemValue) {
+      setIsLoading(true);
+      try {
+        setSelectedCity(itemValue);
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate loading
+        navigation.navigate('Venues', { city: itemValue });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
+  const onScroll = (event) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / (windowWidth * 0.8 < 320 ? windowWidth * 0.8 : 320));
+    setCurrentIndex(index);
+  };
+
+  const handleImageTap = () => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>🎉 Find the Perfect Venue for Your Special Events</Text>
-        <Text style={styles.headerSubtitle}>
-          Celebrate birthdays, anniversaries, baby showers, reunions, and more with <Text style={styles.brand}>Sambrama</Text>
-        </Text>
-      </View>
+    <ImageBackground
+      source={require('../../assets/glossy_bg.png')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }} contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.header, { backgroundColor: 'rgba(255,107,107,0.8)' }]}>
+          <Text style={styles.headerTitle}>🎉 Find the Perfect Venue for Your Special Events</Text>
+          <Text style={styles.headerSubtitle}>
+            Celebrate birthdays, anniversaries, baby showers, reunions, and more with <Text style={styles.brand}>Sambrama</Text>
+          </Text>
+        </View>
 
-      <View style={styles.ctaContainer}>
-        <Text style={styles.findVenueLabel}>Find your venue</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={selectedCity}
-            style={styles.picker}
-            onValueChange={handleCityChange}
-            dropdownIconColor="#ff6b6b"
-            mode={Platform.OS === 'ios' ? 'dialog' : 'dropdown'}
+        <View style={styles.ctaContainer}>
+          <Text style={styles.findVenueLabel}>Find your venue</Text>
+          <View style={styles.pickerContainer}>
+            {isLoading ? (
+              <ActivityIndicator size="large" color="#ff6b6b" style={styles.loader} />
+            ) : (
+              <Picker
+                selectedValue={selectedCity}
+                style={styles.picker}
+                onValueChange={handleCityChange}
+                dropdownIconColor="#ff6b6b"
+                mode={Platform.OS === 'ios' ? 'dialog' : 'dropdown'}
+              >
+                <Picker.Item label="-- Select City --" value="" />
+                {cities.map((city) => (
+                  <Picker.Item key={city} label={city} value={city} />
+                ))}
+              </Picker>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.gallerySection}>
+          <Text style={styles.galleryTitle}>Popular Venues</Text>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={styles.galleryContainer}
+            contentContainerStyle={{}}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
           >
-            <Picker.Item label="-- Select City --" value="" />
-            {cities.map((city) => (
-              <Picker.Item key={city} label={city} value={city} />
+            {images.map((img, idx) => (
+              <View key={idx} style={{ width: windowWidth, alignItems: 'center', justifyContent: 'center' }}>
+                <TouchableOpacity activeOpacity={0.9} onPress={handleImageTap}>
+                  <Image
+                    source={img.src}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              </View>
             ))}
-          </Picker>
+          </ScrollView>
+          <View style={styles.dotsContainer}>
+            {images.map((_, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.dot, idx === currentIndex && styles.activeDot]}
+                onPress={() => handleDotClick(idx)}
+                activeOpacity={0.7}
+              />
+            ))}
+          </View>
         </View>
-      </View>
 
-      <View style={styles.gallerySection}>
-        <Text style={styles.galleryTitle}>Popular Venues</Text>
-        <View style={styles.galleryContainer}>
-          <TouchableOpacity style={styles.arrow} onPress={handlePrev} activeOpacity={0.7}>
-            <Text style={styles.arrowText}>←</Text>
-          </TouchableOpacity>
-          <Image
-            source={{ uri: images[currentIndex].src }}
-            style={styles.galleryImage}
-            resizeMode="cover"
-          />
-          <TouchableOpacity style={styles.arrow} onPress={handleNext} activeOpacity={0.7}>
-            <Text style={styles.arrowText}>→</Text>
-          </TouchableOpacity>
+        <View style={styles.infoSection}>
+          <Text style={styles.infoTitle}>Why Sambrama?</Text>
+          <Text style={styles.infoItem}>✨ Curated venues for every occasion</Text>
+          <Text style={styles.infoItem}>📍 Easy city selection and instant viewing</Text>
+          <Text style={styles.infoItem}>📸 Browse beautiful venue photos</Text>
+          <Text style={styles.infoItem}>💬 Friendly support for your event needs</Text>
         </View>
-        <View style={styles.dotsContainer}>
-          {images.map((_, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={[styles.dot, idx === currentIndex && styles.activeDot]}
-              onPress={() => handleDotClick(idx)}
-              activeOpacity={0.7}
-            />
-          ))}
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            © 2025 <Text style={styles.brandFooter}>Sambrama.com</Text> — Your Celebration, Our Venue
+          </Text>
         </View>
-      </View>
-
-      <View style={styles.infoSection}>
-        <Text style={styles.infoTitle}>Why Sambrama?</Text>
-        <Text style={styles.infoItem}>✨ Curated venues for every occasion</Text>
-        <Text style={styles.infoItem}>📍 Easy city selection and instant viewing</Text>
-        <Text style={styles.infoItem}>📸 Browse beautiful venue photos</Text>
-        <Text style={styles.infoItem}>💬 Friendly support for your event needs</Text>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          © 2025 <Text style={styles.brandFooter}>Sambrama.com</Text> — Your Celebration, Our Venue
-        </Text>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff3eb' },
+  container: { flex: 1 },
   scrollContent: {
     paddingBottom: 32,
     paddingTop: 0,
   },
-  header: {
-    backgroundColor: '#ff6b6b',
-    paddingVertical: 52,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    marginBottom: 14,
-  },
+ header: {
+		backgroundColor: "#ff6b6b",
+		paddingVertical: 16,
+		paddingHorizontal: 14,
+		alignItems: "center",
+		borderBottomLeftRadius: 24,
+		borderBottomRightRadius: 24,
+        borderTopRadius: 24,
+        borderTopRightRadius: 24,
+        borderTopLeftRadius: 24,
+		marginBottom: 10,
+        marginTop: 40,
+		borderWidth: 2,
+    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
+	},
   headerTitle: {
-    color: '#fff',
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
+    padding: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(200,200,200,0.5)',
+    backgroundColor: '#fff',
+    color: '#ff6b6b',
+    overflow: 'hidden',
   },
   headerSubtitle: {
     color: '#fff',
@@ -163,24 +210,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   pickerContainer: {
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
     backgroundColor: '#fff',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
+    marginBottom: 2,
     width: '100%',
     maxWidth: 350,
-    marginBottom: 2,
     overflow: 'hidden',
   },
   picker: {
     height: 55,
     width: '100%',
+    color: '#333',
+    backgroundColor: 'transparent',
   },
   gallerySection: {
     marginTop: 8,
     alignItems: 'center',
     paddingHorizontal: 0,
     marginBottom: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   galleryTitle: {
     fontSize: 20,
@@ -188,44 +251,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#333',
     textAlign: 'center',
+    marginTop: 8,
   },
   galleryContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff3eb',
+    backgroundColor: 'transparent',
     paddingVertical: 12,
     paddingHorizontal: 0,
   },
   galleryImage: {
     width: Math.min(windowWidth * 0.8, 320),
     height: 180,
-    borderRadius: 10,
-    marginHorizontal: 8,
+    borderRadius: 5,
+    marginHorizontal: 5,
     backgroundColor: '#eee',
-  },
-  arrow: {
-    backgroundColor: '#ff6b6b',
-    borderRadius: 22,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 2,
-    elevation: 8,
-  },
-  arrowText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-     alignItems: 'center',
-    justifyContent: 'center'
   },
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 10,
-    marginBottom: 0,
+    marginBottom: 5,
   },
   dot: {
     width: 12,
@@ -233,6 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#ccc',
     marginHorizontal: 4,
+    marginBottom: 4,
   },
   activeDot: {
     backgroundColor: '#ff6b6b',
@@ -241,6 +287,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 24,
     marginBottom: 32,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   infoTitle: {
     fontSize: 18,
@@ -259,9 +314,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 16,
     backgroundColor: '#f1f1f1',
-    alignItems: 'center',
     borderRadius: 12,
-    marginHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   footerText: {
     color: '#777',
@@ -272,4 +332,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ff6b6b',
   },
+  loader: {
+    marginVertical: 20,
+  }
 });
