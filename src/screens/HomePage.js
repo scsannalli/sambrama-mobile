@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, Platform, ActivityIndicator, ImageBackground } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
-import { BlurView } from 'expo-blur';
+import { Colors } from '../theme/Colors';
+import { GlobalStyles } from '../theme/GlobalStyles';
+import { ModernButton } from '../components/ModernButton';
+import { ModernHeader } from '../components/ModernHeader';
 
 const images = [
   {
@@ -67,272 +71,352 @@ export default function HomePage({ navigation }) {
   return (
     <ImageBackground
       source={require('../../assets/glossy_bg.png')}
-      style={{ flex: 1 }}
+      style={styles.backgroundImage}
       resizeMode="cover"
+      imageStyle={{ opacity: 0.8 }}
     >
-      <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }} contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.header, { backgroundColor: 'rgba(255,107,107,0.8)' }]}>
-          <Text style={styles.headerTitle}>🎉 Find the Perfect Venue for Your Special Events</Text>
-          <Text style={styles.headerSubtitle}>
-            Celebrate birthdays, anniversaries, baby showers, reunions, and more with <Text style={styles.brand}>Sambrama</Text>
-          </Text>
-        </View>
+      <LinearGradient
+        colors={Colors.gradients.darkNavy}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ModernHeader
+            title="🎉 Find Perfect Venues"
+            subtitle="Celebrate birthdays, anniversaries, baby showers, reunions, and more with Sambrama"
+            gradient={Colors.gradients.celebration}
+          />
 
-        <View style={styles.ctaContainer}>
-          <Text style={styles.findVenueLabel}>Find your venue</Text>
-          <View style={styles.pickerContainer}>
-            {isLoading ? (
-              <ActivityIndicator size="large" color="#ff6b6b" style={styles.loader} />
-            ) : (
-              <Picker
-                selectedValue={selectedCity}
-                style={styles.picker}
-                onValueChange={handleCityChange}
-                dropdownIconColor="#ff6b6b"
-                mode={Platform.OS === 'ios' ? 'dialog' : 'dropdown'}
-              >
-                <Picker.Item label="-- Select City --" value="" />
-                {cities.map((city) => (
-                  <Picker.Item key={city} label={city} value={city} />
-                ))}
-              </Picker>
-            )}
+          <View style={[GlobalStyles.card, styles.ctaCard]}>
+            <Text style={styles.findVenueLabel}>Find your venue</Text>
+            <View style={styles.pickerContainer}>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={Colors.primary} />
+                  <Text style={styles.loadingText}>Searching venues...</Text>
+                </View>
+              ) : (
+                <Picker
+                  selectedValue={selectedCity}
+                  style={styles.picker}
+                  onValueChange={handleCityChange}
+                  dropdownIconColor={Colors.primary}
+                  mode={Platform.OS === 'ios' ? 'dialog' : 'dropdown'}
+                >
+                  <Picker.Item label="-- Select City --" value="" />
+                  {cities.map((city) => (
+                    <Picker.Item key={city} label={city} value={city} />
+                  ))}
+                </Picker>
+              )}
+            </View>
           </View>
-        </View>
 
-        <View style={styles.gallerySection}>
-          <Text style={styles.galleryTitle}>Popular Venues</Text>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            style={styles.galleryContainer}
-            contentContainerStyle={{}}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-          >
-            {images.map((img, idx) => (
-              <View key={idx} style={{ width: windowWidth, alignItems: 'center', justifyContent: 'center' }}>
-                <TouchableOpacity activeOpacity={0.9} onPress={handleImageTap}>
-                  <Image
-                    source={img.src}
-                    style={styles.galleryImage}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-          <View style={styles.dotsContainer}>
-            {images.map((_, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[styles.dot, idx === currentIndex && styles.activeDot]}
-                onPress={() => handleDotClick(idx)}
-                activeOpacity={0.7}
-              />
-            ))}
+          <View style={[GlobalStyles.cardElevated, styles.galleryCard]}>
+            <Text style={[GlobalStyles.heading2, styles.galleryTitle]}>Popular Venues</Text>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.galleryContainer}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+            >
+              {images.map((img, idx) => (
+                <View key={idx} style={styles.imageContainer}>
+                  <TouchableOpacity activeOpacity={0.9} onPress={handleImageTap}>
+                    <View style={styles.imageWrapper}>
+                      <Image
+                        source={img.src}
+                        style={styles.galleryImage}
+                        resizeMode="cover"
+                      />
+                      <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.6)']}
+                        style={styles.imageOverlay}
+                      />
+                      <View style={styles.imageTextOverlay}>
+                        <Text style={styles.imageTitle}>{img.alt}</Text>
+                        <Text style={styles.imageSubtitle}>Perfect for celebrations</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.dotsContainer}>
+              {images.map((_, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={[styles.dot, idx === currentIndex && styles.activeDot]}
+                  onPress={() => handleDotClick(idx)}
+                  activeOpacity={0.7}
+                />
+              ))}
+            </View>
           </View>
-        </View>
 
-        <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>Why Sambrama?</Text>
-          <Text style={styles.infoItem}>✨ Curated venues for every occasion</Text>
-          <Text style={styles.infoItem}>📍 Easy city selection and instant viewing</Text>
-          <Text style={styles.infoItem}>📸 Browse beautiful venue photos</Text>
-          <Text style={styles.infoItem}>💬 Friendly support for your event needs</Text>
-        </View>
+          <View style={[GlobalStyles.card, styles.infoCard]}>
+            <Text style={[GlobalStyles.heading2, styles.infoTitle]}>Why Choose Sambrama?</Text>
+            <View style={styles.featuresList}>
+              {[
+                { icon: '✨', title: 'Curated Venues', desc: 'Hand-picked venues for every occasion' },
+                { icon: '📍', title: 'Easy Selection', desc: 'Find venues by city instantly' },
+                { icon: '📸', title: 'Beautiful Photos', desc: 'Browse stunning venue galleries' },
+                { icon: '💬', title: 'Expert Support', desc: 'Friendly help for your events' },
+              ].map((feature, index) => (
+                <View key={index} style={styles.featureItem}>
+                  <Text style={styles.featureIcon}>{feature.icon}</Text>
+                  <View style={styles.featureContent}>
+                    <Text style={styles.featureTitle}>{feature.title}</Text>
+                    <Text style={styles.featureDesc}>{feature.desc}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            © 2025 <Text style={styles.brandFooter}>Sambrama.com</Text> — Your Celebration, Our Venue
-          </Text>
-        </View>
-      </ScrollView>
+          <View style={styles.ctaButtonContainer}>
+            <ModernButton
+              title="Explore All Venues"
+              onPress={() => navigation.navigate('Venues')}
+              gradient={Colors.gradients.primary}
+              size="large"
+              style={styles.exploreButton}
+            />
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              © 2025 <Text style={styles.brandFooter}>Sambrama.com</Text> — Your Celebration, Our Venue
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  backgroundImage: {
+    flex: 1,
+  },
+  
+  backgroundGradient: {
+    flex: 1,
+  },
+  
+  scrollView: {
+    flex: 1,
+  },
+  
   scrollContent: {
     paddingBottom: 32,
-    paddingTop: 0,
   },
- header: {
-		backgroundColor: "#ff6b6b",
-		paddingVertical: 16,
-		paddingHorizontal: 14,
-		alignItems: "center",
-		borderBottomLeftRadius: 24,
-		borderBottomRightRadius: 24,
-        borderTopRadius: 24,
-        borderTopRightRadius: 24,
-        borderTopLeftRadius: 24,
-		marginBottom: 10,
-        marginTop: 40,
-		borderWidth: 2,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-	},
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-    padding: 8,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(200,200,200,0.5)',
-    backgroundColor: '#fff',
-    color: '#ff6b6b',
-    overflow: 'hidden',
-  },
-  headerSubtitle: {
-    color: '#fff',
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  brand: {
-    fontWeight: 'bold',
-    color: '#fff'
-  },
-  ctaContainer: {
-    marginTop: 8,
-    marginBottom: 24,
+
+  ctaCard: {
+    marginTop: 20,
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
+
   findVenueLabel: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#ff6b6b',
-    marginBottom: 8,
+    color: Colors.onSurface,
+    marginBottom: 16,
     textAlign: 'center',
   },
+
   pickerContainer: {
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    backgroundColor: '#fff',
-    shadowColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.outline,
+    backgroundColor: Colors.surface,
+    shadowColor: Colors.shadow.medium,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 1,
     shadowRadius: 8,
-    elevation: 6,
-    marginBottom: 2,
+    elevation: 4,
     width: '100%',
-    maxWidth: 350,
     overflow: 'hidden',
   },
+
   picker: {
     height: 55,
     width: '100%',
-    color: '#333',
-    backgroundColor: 'transparent',
+    color: Colors.onSurface,
   },
-  gallerySection: {
-    marginTop: 8,
+
+  loadingContainer: {
     alignItems: 'center',
-    paddingHorizontal: 0,
-    marginBottom: 24,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingVertical: 20,
   },
-  galleryTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-    textAlign: 'center',
+
+  loadingText: {
     marginTop: 8,
+    color: Colors.onSurfaceVariant,
+    fontSize: 14,
   },
+
+  galleryCard: {
+    marginTop: 16,
+    paddingBottom: 20,
+  },
+
+  galleryTitle: {
+    textAlign: 'center',
+    marginBottom: 16,
+    color: Colors.onSurface,
+  },
+
   galleryContainer: {
-    flexDirection: 'row',
     backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 0,
   },
+
+  imageContainer: {
+    width: windowWidth - 64,
+    marginHorizontal: 16,
+    alignItems: 'center',
+  },
+
+  imageWrapper: {
+    position: 'relative',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: Colors.shadow.dark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+
   galleryImage: {
-    width: Math.min(windowWidth * 0.8, 320),
-    height: 180,
-    borderRadius: 5,
-    marginHorizontal: 5,
-    backgroundColor: '#eee',
+    width: windowWidth - 64,
+    height: 200,
+    backgroundColor: Colors.surfaceVariant,
   },
+
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+  },
+
+  imageTextOverlay: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+  },
+
+  imageTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.onPrimary,
+    marginBottom: 4,
+  },
+
+  imageSubtitle: {
+    fontSize: 14,
+    color: Colors.onPrimary,
+    opacity: 0.9,
+  },
+
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#ccc',
-    marginHorizontal: 4,
-    marginBottom: 4,
-  },
-  activeDot: {
-    backgroundColor: '#ff6b6b',
-  },
-  infoSection: {
-    marginTop: 8,
-    paddingHorizontal: 24,
-    marginBottom: 32,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-    textAlign: 'center',
-  },
-  infoItem: {
-    fontSize: 15,
-    marginBottom: 4,
-    color: '#444',
-    textAlign: 'center',
-  },
-  footer: {
     marginTop: 16,
-    padding: 16,
-    backgroundColor: '#f1f1f1',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 6,
   },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.outline,
+    marginHorizontal: 4,
+  },
+
+  activeDot: {
+    backgroundColor: Colors.primary,
+    width: 24,
+  },
+
+  infoCard: {
+    marginTop: 16,
+  },
+
+  infoTitle: {
+    textAlign: 'center',
+    marginBottom: 20,
+    color: Colors.onSurface,
+  },
+
+  featuresList: {
+    gap: 16,
+  },
+
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+
+  featureIcon: {
+    fontSize: 24,
+    marginRight: 16,
+    marginTop: 2,
+  },
+
+  featureContent: {
+    flex: 1,
+  },
+
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.onSurface,
+    marginBottom: 4,
+  },
+
+  featureDesc: {
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+    lineHeight: 20,
+  },
+
+  ctaButtonContainer: {
+    marginTop: 24,
+    marginHorizontal: 16,
+  },
+
+  exploreButton: {
+    marginVertical: 8,
+  },
+
+  footer: {
+    marginTop: 32,
+    marginHorizontal: 16,
+    padding: 20,
+    backgroundColor: Colors.surfaceVariant,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+
   footerText: {
-    color: '#777',
+    color: Colors.onSurfaceVariant,
     fontSize: 14,
     textAlign: 'center',
+    lineHeight: 20,
   },
+
   brandFooter: {
     fontWeight: 'bold',
-    color: '#ff6b6b',
+    color: Colors.primary,
   },
-  loader: {
-    marginVertical: 20,
-  }
 });

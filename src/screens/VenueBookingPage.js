@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform, TouchableOpacity, ActivityIndicator, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, ScrollView, ImageBackground } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '../theme/Colors';
+import { GlobalStyles } from '../theme/GlobalStyles';
+import { ModernButton } from '../components/ModernButton';
+import { ModernInput } from '../components/ModernInput';
+import { ModernHeader } from '../components/ModernHeader';
 
 const today = new Date();
 const oneYearFromToday = new Date();
@@ -55,204 +60,211 @@ export default function VenueBookingPage({ route, navigation }) {
     return (
         <ImageBackground
             source={require('../../assets/glossy_bg.png')}
-            style={{ flex: 1 }}
+            style={styles.backgroundImage}
             resizeMode="cover"
+            imageStyle={{ opacity: 0.8 }}
         >
-            <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }} contentContainerStyle={styles.scrollContent}>
-                
-                <View style={styles.header}>
-                    <Text style={styles.heading}>Venue Booking</Text>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Text style={styles.backButtonText}>← Back</Text>
-                    </TouchableOpacity>
-                </View>
-                
-                {venue && (
-                    <View style={styles.venueDetails}>
-                        <Text style={styles.venueName}>{venue.name}</Text>
-                        <Text style={styles.venueLocation}>{venue.location}</Text>
-                        <Text style={styles.venueCost}>Cost: {venue.cost}</Text>
-                    </View>
-                )}
-                <Text style={styles.label}>Select Date</Text>
-                <TouchableOpacity style={styles.dateBtn} onPress={() => setShowPicker(true)}>
-                    <Text style={styles.dateBtnText}>{date.toDateString()}</Text>
-                </TouchableOpacity>
-                {showPicker && (
-                    <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display="default"
-                        minimumDate={today}
-                        maximumDate={oneYearFromToday}
-                        onChange={onChange}
-                    />
-                )}
-                <Text style={styles.label}>Name</Text>
-                <TextInput
-                    style={[styles.input, errors.name && styles.inputError]}
-                    placeholder="Your Name"
-                    value={name}
-                    onChangeText={setName}
-                    placeholderTextColor="#90caf9"
+            <LinearGradient
+                colors={Colors.gradients.darkNavy}
+                style={styles.backgroundGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            >
+                <ModernHeader
+                    title="Book Your Venue"
+                    subtitle="Complete the form below to reserve your perfect event space"
+                    gradient={Colors.gradients.primary}
+                    showBackButton={true}
+                    navigation={navigation}
                 />
-                {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-                <Text style={styles.label}>Phone Number</Text>
-                <TextInput
-                    style={[styles.input, errors.phone && styles.inputError]}
-                    placeholder="Your Phone Number"
-                    value={phone}
-                    onChangeText={setPhone}
-                    keyboardType="phone-pad"
-                    placeholderTextColor="#90caf9"
-                />
-                {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
-                <TouchableOpacity 
-                    style={[styles.bookBtn, isSubmitting && styles.bookBtnDisabled]}
-                    onPress={handleBooking}
-                    disabled={isSubmitting}
+                
+                <ScrollView 
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
                 >
-                    {isSubmitting ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.bookBtnText}>Book and Pay</Text>
+                    {venue && (
+                        <View style={[GlobalStyles.cardElevated, styles.venueCard]}>
+                            <Text style={[GlobalStyles.heading2, styles.venueName]}>{venue.name}</Text>
+                            <Text style={styles.venueLocation}>📍 {venue.location}</Text>
+                            <Text style={styles.venueCost}>💰 {venue.cost}</Text>
+                        </View>
                     )}
-                </TouchableOpacity>
-            </ScrollView>
+
+                    <View style={[GlobalStyles.card, styles.formCard]}>
+                        <Text style={[GlobalStyles.heading3, styles.formTitle]}>Booking Details</Text>
+                        
+                        <View style={styles.dateSection}>
+                            <Text style={styles.sectionLabel}>Select Event Date</Text>
+                            <ModernButton
+                                title={date.toDateString()}
+                                onPress={() => setShowPicker(true)}
+                                variant="outline"
+                                style={styles.dateButton}
+                            />
+                            {showPicker && (
+                                <DateTimePicker
+                                    value={date}
+                                    mode="date"
+                                    display="default"
+                                    minimumDate={today}
+                                    maximumDate={oneYearFromToday}
+                                    onChange={onChange}
+                                />
+                            )}
+                        </View>
+
+                        <ModernInput
+                            label="Full Name"
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="Enter your full name"
+                            error={errors.name}
+                        />
+
+                        <ModernInput
+                            label="Phone Number"
+                            value={phone}
+                            onChangeText={setPhone}
+                            placeholder="Enter 10-digit phone number"
+                            keyboardType="phone-pad"
+                            maxLength={10}
+                            error={errors.phone}
+                        />
+
+                        <View style={styles.submitSection}>
+                            <ModernButton
+                                title="Book Venue"
+                                onPress={handleBooking}
+                                loading={isSubmitting}
+                                gradient={Colors.gradients.primary}
+                                size="large"
+                                style={styles.submitButton}
+                            />
+                            
+                            <ModernButton
+                                title="Cancel"
+                                onPress={() => navigation.goBack()}
+                                variant="outline"
+                                style={styles.cancelButton}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={[GlobalStyles.card, styles.infoCard]}>
+                        <Text style={[GlobalStyles.heading3, styles.infoTitle]}>Booking Information</Text>
+                        <Text style={styles.infoText}>
+                            • We'll contact you within 24 hours to confirm your booking
+                        </Text>
+                        <Text style={styles.infoText}>
+                            • A booking fee may be required to secure your date
+                        </Text>
+                        <Text style={styles.infoText}>
+                            • Free cancellation up to 48 hours before the event
+                        </Text>
+                    </View>
+                </ScrollView>
+            </LinearGradient>
         </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    header: {
-       backgroundColor: "#ff6b6b",
-		paddingVertical: 16,
-		paddingHorizontal: 14,
-		alignItems: "center",
-		borderBottomLeftRadius: 24,
-		borderBottomRightRadius: 24,
-        borderTopRadius: 24,
-        borderTopRightRadius: 24,
-        borderTopLeftRadius: 24,
-		marginBottom: 10,
-		borderWidth: 2,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    },
-    backButton: {
-        position: 'absolute',
-        left: 16,
-        backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 4,
-        elevation: 2,
-        marginTop: 20,
-    },
-    backButtonText: {
-        color: '#ff6b6b',
-        fontSize: 12,
-        fontWeight: 'bold',
-        alignContent: 'center',
-        textAlign: 'center',
-        padding: 2,
-        marginBottom:4,
-    },
-    heading: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
+    backgroundImage: {
         flex: 1,
-        marginTop:10,
     },
-    venueDetails: {
-        marginBottom: 18,
-        backgroundColor: '#ffe0d3', // soft orange/peach for card
-        borderRadius: 10,
-        padding: 16,
-        marginHorizontal: 18,
-        alignItems: 'center',
-        borderWidth: 1.5,
-        borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
+    
+    backgroundGradient: {
+        flex: 1,
     },
-    venueName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#000',
-        marginBottom: 2,
+    
+    scrollView: {
+        flex: 1,
     },
-    venueLocation: {
-        fontSize: 15,
-        color: '#000',
-        marginTop: 2,
-    },
-    venueCost: {
-        fontSize: 15,
-        color: '#2e7d32',
-        marginTop: 2,
-    },
-    label: {
-        fontSize: 18,
-        marginTop: 12,
-        marginBottom: 8,
-        color: '#fff',
-        marginLeft: 28,
-    },
-    dateBtn: {
-        backgroundColor: '#ffbfae',
-        borderRadius: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        marginBottom: 8,
-        marginHorizontal: 24,
-        borderWidth: 1.5,
-        borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    },
-    dateBtnText: {
-        color: '#000',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    input: {
-        borderWidth: 1.5,
-        borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        marginHorizontal: 24,
-        marginBottom: 8,
-        backgroundColor: '#fff',
-        color: '#ff6b6b',
-    },
-    inputError: {
-        borderColor: '#ff0000',
-    },
-    errorText: {
-        color: '#ff0000',
-        fontSize: 12,
-        marginLeft: 24,
-        marginBottom: 8,
-    },
-    bookBtn: {
-        backgroundColor: '#ff6b6b',
-        borderRadius: 8,
-        marginTop: 24,
-        marginHorizontal: 24,
-        paddingVertical: 14,
-        alignItems: 'center',
-        borderWidth: 1.5,
-        borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-    },
-    bookBtnDisabled: {
-        opacity: 0.7,
-    },
-    bookBtnText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+    
     scrollContent: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        paddingBottom: 24,
+        paddingBottom: 32,
+        paddingTop: 16,
+    },
+    
+    venueCard: {
+        marginHorizontal: 16,
+        marginBottom: 16,
+        alignItems: 'center',
+    },
+    
+    venueName: {
+        textAlign: 'center',
+        color: Colors.onSurface,
+        marginBottom: 8,
+    },
+    
+    venueLocation: {
+        fontSize: 16,
+        color: Colors.onSurfaceVariant,
+        marginBottom: 4,
+    },
+    
+    venueCost: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: Colors.celebration,
+    },
+    
+    formCard: {
+        marginHorizontal: 16,
+        marginBottom: 16,
+    },
+    
+    formTitle: {
+        textAlign: 'center',
+        marginBottom: 20,
+        color: Colors.onSurface,
+    },
+    
+    dateSection: {
+        marginVertical: 16,
+    },
+    
+    sectionLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: Colors.onSurface,
+        marginBottom: 12,
+    },
+    
+    dateButton: {
+        marginBottom: 8,
+    },
+    
+    submitSection: {
+        marginTop: 24,
+        gap: 12,
+    },
+    
+    submitButton: {
+        marginBottom: 8,
+    },
+    
+    cancelButton: {
+        marginTop: 8,
+    },
+    
+    infoCard: {
+        marginHorizontal: 16,
+        marginBottom: 16,
+    },
+    
+    infoTitle: {
+        textAlign: 'center',
+        marginBottom: 16,
+        color: Colors.onSurface,
+    },
+    
+    infoText: {
+        fontSize: 14,
+        color: Colors.onSurfaceVariant,
+        lineHeight: 20,
+        marginBottom: 8,
     },
 });

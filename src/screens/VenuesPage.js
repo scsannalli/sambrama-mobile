@@ -1,6 +1,10 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ImageBackground } from "react-native";
-import { BlurView } from 'expo-blur';
+import { View, Text, StyleSheet, FlatList, ImageBackground } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '../theme/Colors';
+import { GlobalStyles } from '../theme/GlobalStyles';
+import { VenueCard } from '../components/VenueCard';
+import { ModernHeader } from '../components/ModernHeader';
 
 const venues = [
 	{
@@ -55,11 +59,11 @@ const venues = [
 		name: "Raichur Heritage Venue",
 		city: "Raichur",
 		images: [
-			require('../../assets/venues/venue4_img1.jpg'),
+			require('../../assets/venues/venue1_img1.jpg'),
 			require('../../assets/venues/venue2_img2.jpg'),
-			require('../../assets/venues/venue1_img3.jpg'),
+			require('../../assets/venues/venue1_img2.jpg'),
 		],
-		image: require('../../assets/venues/venue4_img1.jpg'),
+		image: require('../../assets/venues/venue1_img1.jpg'),
 		description: "A heritage property with classic charm and all modern comforts.",
 		cost: "9000 /-",
 	},
@@ -70,204 +74,107 @@ export default function VenuesPage({ navigation, route }) {
     const city = route?.params?.city;
     const filteredVenues = city ? venues.filter((v) => v.city === city) : venues;
 
+    const renderVenue = ({ item, index }) => (
+        <VenueCard
+            venue={item}
+            onPress={() => navigation.navigate("VenueDetails", {
+                venue: {
+                    ...item,
+                    images: item.images || [item.image], // fallback for single image
+                    amenities: item.amenities || [
+                        "Spacious Hall",
+                        "Parking",
+                        "AC",
+                        "Stage",
+                        "Dining Area",
+                    ],
+                    location: item.location || item.city,
+                    cost: item.cost || "Contact for price",
+                },
+            })}
+            style={styles.venueCard}
+        />
+    );
+
     return (
         <ImageBackground
             source={require('../../assets/glossy_bg.png')}
-            style={{ flex: 1 }}
+            style={styles.backgroundImage}
             resizeMode="cover"
+            imageStyle={{ opacity: 0.8 }}
         >
-            <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }} contentContainerStyle={styles.scrollContent}>
-                <View style={[styles.header, {backgroundColor: 'rgba(255,107,107,0.8)'}]}>
-                    <Text style={styles.headerTitle}>Venues</Text>
-                    <Text style={styles.headerSubtitle}>
-                        Browse and book the best venues for your celebration
-                    </Text>
+            <LinearGradient
+                colors={Colors.gradients.darkNavy}
+                style={styles.backgroundGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            >
+                <ModernHeader
+                    title={city ? `Venues in ${city}` : "All Venues"}
+                    subtitle="Browse and book the best venues for your celebration"
+                    gradient={Colors.gradients.primary}
+                    showBackButton={true}
+                    navigation={navigation}
+                />
+                
+                <View style={styles.content}>
+                    {city && (
+                        <View style={[GlobalStyles.card, styles.filterCard]}>
+                            <Text style={styles.filterText}>
+                                Showing {filteredVenues.length} venues in <Text style={styles.cityName}>{city}</Text>
+                            </Text>
+                        </View>
+                    )}
+                    
+                    <FlatList
+                        data={filteredVenues}
+                        renderItem={renderVenue}
+                        keyExtractor={(item, index) => index.toString()}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.venuesList}
+                    />
                 </View>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.backLink}>← Back to Home</Text>
-                </TouchableOpacity>
-                <View style={styles.venueGrid}>
-                  {filteredVenues.map((venue, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      style={styles.venueCard}
-                      activeOpacity={0.85}
-                      onPress={() =>
-                        navigation.navigate("VenueDetails", {
-                          venue: {
-                            ...venue,
-                            images: venue.images || [venue.image], // fallback for single image
-                            amenities: venue.amenities || [
-                              "Spacious Hall",
-                              "Parking",
-                              "AC",
-                              "Stage",
-                              "Dining Area",
-                            ],
-                            location: venue.location || venue.city,
-                            cost: venue.cost || "Contact for price",
-                          },
-                        })
-                      }
-                    >
-                      <Image source={venue.image} style={styles.venueImage} />
-                      <View style={styles.venueInfo}>
-                        <Text style={styles.venueName}>{venue.name}</Text>
-                        <Text style={styles.venueCity}>City: {venue.city}</Text>
-                        <Text style={styles.venueDesc}>{venue.description}</Text>
-                        <Text style={styles.venuePrice}>
-                          {venue.cost ? `₹ ${venue.cost}` : "Contact for price"}
-                        </Text>
-                        <TouchableOpacity
-                          style={styles.bookBtn}
-                          onPress={() =>
-                            navigation.navigate("VenueDetails", {
-                              venue: {
-                                ...venue,
-                                images: venue.images || [venue.image],
-                                amenities: venue.amenities || [
-                                  "Spacious Hall",
-                                  "Parking",
-                                  "AC",
-                                  "Stage",
-                                  "Dining Area",
-                                ],
-                                location: venue.location || venue.city,
-                                cost: venue.cost || "Contact for price",
-                              },
-                            })
-                          }
-                        >
-                          <Text style={styles.bookBtnText}>Book Now</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>
-                        © 2025{" "}
-                        <Text style={styles.brand}>Sambrama.com</Text> — Your Celebration, Our Venue
-                    </Text>
-                </View>
-            </ScrollView>
+            </LinearGradient>
         </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-	header: {
-		backgroundColor: "#ff6b6b",
-		paddingVertical: 52,
-		paddingHorizontal: 16,
-		alignItems: "center",
-		borderBottomLeftRadius: 24,
-		borderBottomRightRadius: 24,
-		borderTopLeftRadius: 24,
-		borderTopRightRadius: 24,
-		marginBottom: 10,
-		marginTop: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-	},
-	headerTitle: {
-		color: "#fff",
-		fontSize: 22,
-		fontWeight: "bold",
-		textAlign: "center",
-		marginBottom: 8,
-	},
-	headerSubtitle: {
-		color: "#fff",
-		fontSize: 15,
-		textAlign: "center",
-	},
-	backLink: {
-		color: "#ff6b6b",
-		fontSize: 16,
-		marginLeft: 16,
-		marginTop: 16,
-		marginBottom: 8,
-	},
-	venueGrid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		justifyContent: "center",
-		paddingHorizontal: 8,
-	},
-	venueCard: {
-		backgroundColor: "#fff",
-		borderRadius: 10,
-		margin: 8,
-		width: 320,
-		shadowColor: "#000",
-		shadowOpacity: 0.07,
-		shadowRadius: 8,
-		elevation: 2,
-		overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-	},
-	venueImage: {
-		width: "100%",
-		height: 180,
-	},
-	venueInfo: {
-		padding: 12,
-	},
-	venueName: {
-		fontSize: 18,
-		fontWeight: "bold",
-		marginBottom: 4,
-	},
-	venueCity: {
-		fontSize: 14,
-		color: "#888",
-		marginBottom: 4,
-	},
-	venueDesc: {
-		fontSize: 14,
-		color: "#444",
-	},
-	venuePrice: {
-		fontSize: 16,
-		fontWeight: "bold",
-		color: "#0288d1",
-		marginTop: 8,
-		marginBottom: 8,
-	},
-	bookBtn: {
-		backgroundColor: "#ff6b6b",
-		alignSelf: "center",
-		borderRadius: 8,
-		marginTop: 4,
-		marginBottom: 4,
-		paddingVertical: 10,
-		paddingHorizontal: 28,
-	},
-	bookBtnText: {
-		color: "#fff",
-		fontSize: 16,
-		fontWeight: "bold",
-	},
-	footer: {
-		alignItems: "center",
-		padding: 16,
-		backgroundColor: "#f1f1f1",
-		borderRadius: 12,
-		marginHorizontal: 16,
-		marginBottom: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(220,220,220,0.7)', // shiny glossy border
-	},
-	footerText: {
-		color: "#777",
-		fontSize: 14,
-		textAlign: "center",
-	},
-	brand: {
-		fontWeight: "bold",
-		color: "#ff6b6b",
-	},
+    backgroundImage: {
+        flex: 1,
+    },
+    
+    backgroundGradient: {
+        flex: 1,
+    },
+    
+    content: {
+        flex: 1,
+        paddingTop: 16,
+    },
+    
+    filterCard: {
+        marginHorizontal: 16,
+        marginBottom: 8,
+        alignItems: 'center',
+    },
+    
+    filterText: {
+        fontSize: 16,
+        color: Colors.onSurface,
+        textAlign: 'center',
+    },
+    
+    cityName: {
+        fontWeight: 'bold',
+        color: Colors.primary,
+    },
+    
+    venuesList: {
+        paddingBottom: 32,
+    },
+    
+    venueCard: {
+        marginBottom: 0, // VenueCard component handles its own margin
+    },
 });

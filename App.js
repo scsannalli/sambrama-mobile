@@ -6,7 +6,6 @@ import HomePage from './src/screens/HomePage';
 import VenuesPage from './src/screens/VenuesPage';
 import VenueDetails from './src/screens/VenueDetails';
 import VenueBookingPage from './src/screens/VenueBookingPage';
-import { Image } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
